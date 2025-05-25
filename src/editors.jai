@@ -1423,8 +1423,13 @@ action_escape :: (editor: *Editor) {
         return;
     }
 
-    reset_search_results(*editor.search_bar);
-    editor.refresh_selection = true;
+    if !is_empty(editor.search_bar.results) {
+        reset_search_results(*editor.search_bar);
+        editor.refresh_selection = true;
+        return;
+    }
+
+    remove_additional_cursors(editor);  // this will clear selection
 }
 
 close_search_bar :: inline (editor: *Editor, jump_to_original_cursor := false, jump_to_selected_result := false) {
@@ -1931,7 +1936,7 @@ find_all :: (using search_bar: *Search_Bar, needle: string, buffer: Buffer) {
             offset = inline bmh_find_index_from_left(buffer_str, needle, start_index = offset, skip_table, case_sensitive = false);
         }
         if offset < 0 break;
-        if whole_word && !match_whole_word(buffer_str, offset, needle.count) { offset += needle.count; continue; }
+        if whole_word && !is_whole_word(buffer_str, offset, needle.count) { offset += needle.count; continue; }
 
         // Valid result, add it to the list
         if selected_result < 0 && offset >= search_point_offset then selected_result = results.count;
